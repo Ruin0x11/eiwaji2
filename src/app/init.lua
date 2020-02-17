@@ -1,8 +1,11 @@
 local wx = require("wx")
 local wxaui = require("wxaui")
 local wxlua = require("wxlua")
+local input = require("app.input")
 local lexer = require("app.lexer")
 local search = require("app.search")
+local display = require("app.display")
+local repl = require("app.repl")
 
 local app = class.class("app")
 
@@ -11,6 +14,7 @@ function app:init()
 
    self.name = "eiwaji2"
    self.version = "0.1.0"
+   self.wx_version = string.match(wx.wxVERSION_STRING, "[%d%.]+")
    self.width = 800
    self.height = 600
 
@@ -33,6 +37,7 @@ function app:init()
    self.frame:CreateStatusBar(self.ID_STATUS_BAR)
    self.frame:SetStatusText("Welcome to wxLua.")
 
+   self:connect_frame(wx.wxID_EXIT, wx.wxEVT_COMMAND_MENU_SELECTED, self, "on_menu_exit")
    self:connect_frame(wx.wxID_ABOUT, wx.wxEVT_COMMAND_MENU_SELECTED, self, "on_menu_about")
 
    self.wx_app.TopWindow = self.frame
@@ -41,8 +46,11 @@ function app:init()
    self.aui = wxaui.wxAuiManager()
    self.aui:SetManagedWindow(self.frame);
 
-   self.widget_search = search:new(self, self.frame)
+   self.widget_input = input:new(self, self.frame)
    self.widget_lexer = lexer:new(self, self.frame)
+   self.widget_display = display:new(self, self.frame)
+   self.widget_search = search:new(self, self.frame)
+   self.widget_repl = repl:new(self, self.frame)
 
    self.aui:Update();
 
@@ -89,6 +97,10 @@ function app:on_destroy(event)
       -- since it pushes event handlers into the frame.
       self.aui:UnInit()
    end
+end
+
+function app:on_menu_exit(_)
+   self.frame:Close()
 end
 
 function app:on_menu_about(_)

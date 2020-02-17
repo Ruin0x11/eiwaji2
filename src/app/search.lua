@@ -8,62 +8,75 @@ local COL_MEANING = 2
 local MAX_COLS    = 3
 
 local COLS = {
-   [COL_KANJI] = { name = "Kanji", type = wx.wxGRID_VALUE_STRING },
-   [COL_KANA] = { name = "Kana", type = wx.wxGRID_VALUE_STRING },
-   [COL_MEANING] = { name = "Meaning", type = wx.wxGRID_VALUE_STRING },
+   [COL_KANJI] = { name = "Kanji", type = wx.wxGRID_VALUE_STRING, width = 80 },
+   [COL_KANA] = { name = "Kana", type = wx.wxGRID_VALUE_STRING, width = 80 },
+   [COL_MEANING] = { name = "Meaning", type = wx.wxGRID_VALUE_STRING, width = 180 },
 }
 
 local function make_gridtable(data)
    local gridtable = wx.wxLuaGridTableBase()
 
-   function gridtable:GetTypeName(row, col)
-      local ty = COLS[col]
-      if ty == nil then
-         error(("Unknown column %d"):format(col))
-      end
-      return ty.type
-   end
+    data.gridtable = gridtable
+    gridtable.GetTypeName = function( self, row, col )
+        return string.format("%s:80", wx.wxGRID_VALUE_STRING)
+    end
 
-   function gridtable:GetNumberRows()
-      print(#data)
-      return #data
-   end
+    gridtable.GetNumberRows = function( self )
+       print(#data)
+        return #data
+    end
 
-   function gridtable:GetNumberColumns()
-      return MAX_COLS
-   end
+    gridtable.GetNumberCols = function( self )
+        return MAX_COLS
+    end
 
-   function gridtable:IsEmptyCell(row, col)
-      return false
-   end
+    gridtable.IsEmptyCell = function( self, row, col )
+        return false
+    end
 
-   function gridtable:GetValue(row, col)
-      local row_data = data[row+1]
-      local cell_data = row_data[col+1]
+    gridtable.GetValue = function( self, row, col )
+        return data[row+1][col+1]
+    end
 
-      return cell_data
-   end
+    gridtable.SetValue = function( self, row, col, value )
+        data[row+1][col+1] = value
+    end
 
-   function gridtable:SetValue(row, col, value)
-      data[row+1][col+1] = value
-   end
+    gridtable.CanGetValueAs = function( self, row, col, typeName )
+        if typeName == wx.wxGRID_VALUE_STRING then
+           return true
+        end
+        return false
+    end
 
-   function gridtable:CanGetValueAs(row, col, typeName)
-      return typeName == wx.wxGRID_VALUE_STRING
-   end
+    gridtable.CanSetValueAs = function( self, row, col, typeName )
+        return self:CanGetValueAs(row, col, typeName)
+    end
 
-   function gridtable:CanSetValueAs(row, col, typeName)
-      return self:CanGetValueAs(row, col, typeName)
-   end
+    gridtable.GetValueAsLong = function( self, row, col )
+       return -1
+    end
 
-   function gridtable.GetColLabelValue(col)
-      return COLS[col].name
-   end
+    gridtable.GetValueAsBool = function( self, row, col )
+       return false
+    end
+
+    gridtable.SetValueAsLong = function( self, row, col, value )
+    end
+
+    gridtable.SetValueAsBool = function( self, row, col, value )
+    end
+
+    gridtable.GetColLabelValue = function( self, col )
+        return COLS[col].name
+    end
 
    return gridtable
 end
 
 function search:init(app, frame)
+   self.app = app
+
    self.data = {}
    self.data[1] = {"猫", "ねこ", "cat"}
    self.data[2] = {"猫", "ねこ", "cat"}
@@ -71,21 +84,25 @@ function search:init(app, frame)
    self.grid = wx.wxGrid(frame, wx.wxID_ANY)
    self.gridtable = make_gridtable(self.data)
 
-   --self.grid:SetRowLabelSize(0)
+   self.grid:SetTable(self.gridtable, true)
+   self.grid:SetRowLabelSize(0)
    self.grid:SetColLabelAlignment(wx.wxALIGN_CENTRE, wx.wxALIGN_CENTRE)
+
+   local attr_ro = wx.wxGridCellAttr()
+   attr_ro:SetReadOnly()
+
    for col=0,MAX_COLS-1 do
-      self.grid:SetColLabelValue(col, COLS[col].name)
+      self.grid:SetColSize(col, COLS[col].width)
+      self.grid:SetColAttr(col, attr_ro)
    end
 
-   -- Set the table to the grid, this allows the following SetColAttr() functions
-   -- to work, otherwise they silently do nothing.
-   self.grid:SetTable(self.gridtable, true)
+   self.grid:Connect(wx.wxEVT_GRID_SELECT_CELL, function(event) self:on_grid_select_cell(event) end)
 
    app:add_pane(self.grid,
                 {
                    Name = "Search",
                    Caption = "Search",
-                   BestSize = wx.wxSize(200, 600),
+                   MinSize = wx.wxSize(340, 300),
                    "Right"
                 })
 
@@ -93,7 +110,21 @@ function search:init(app, frame)
 end
 
 function search:search_word(word)
-   self.data[1] = {"猫", "ねこ", "cat"}
+   print("Search", word)
+   self.data[#self.data+1] = {"猫", "ねこ", "cat"}
+   self.gridtable = make_gridtable(self.data)
+   self.grid:SetTable(self.gridtable, true)
+   self.grid:ForceRefresh()
+end
+
+--
+-- Events
+--
+
+function search:on_grid_select_cell(event)
+   local row = event:GetRow()
+   local col = event:GetCol()
+   self.app.widget_display:set_text(("%d %d %s"):format(row, col, self.data[row+1][1]))
 end
 
 return search

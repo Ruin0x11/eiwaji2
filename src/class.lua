@@ -20,9 +20,21 @@ local _interfaces = setmetatable({}, { __mode = "k" })
 local _classes = setmetatable({}, { __mode = "k" })
 local _iface_children = setmetatable({}, { __mode = "k" })
 
+local function tostring_raw(tbl)
+   if type(tbl) ~= "table" then
+      return tostring(tbl)
+   end
+
+   local mt = getmetatable(tbl)
+   setmetatable(tbl, {})
+   local s = tostring(tbl)
+   setmetatable(tbl, mt)
+   return s
+end
+
 local function make_tostring(kind, tbl)
    return function(self)
-      local addr = string.gsub(string.tostring_raw(self), "^table: (.*)", "%1")
+      local addr = string.gsub(tostring_raw(self), "^table: (.*)", "%1")
       if self.__class then
          return string.format("instance of '%s' (%s)",
                               rawget(self.__class,'__name') or '?', addr)

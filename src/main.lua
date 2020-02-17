@@ -3,6 +3,8 @@ inspect = require("thirdparty/inspect")
 
 class = require("src/class")
 
+app = nil
+
 local function remove_all_metatables(item, path)
   if path[#path] ~= inspect.METATABLE then return item end
 end
@@ -42,5 +44,5 @@ local wx = require("wx")
 local wxhacks = require("src/wxhacks")
 wxhacks(wx)
 
-local app = require("src/app"):new()
+app = require("src/app"):new()
 app:run()

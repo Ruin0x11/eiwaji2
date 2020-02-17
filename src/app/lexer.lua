@@ -4,6 +4,8 @@ local lexer_html = require("lib.lexer_html")
 local lexer = class.class("lexer")
 
 function lexer:init(app, frame)
+   self.app = app
+
    self.html = wx.wxLuaHtmlWindow(frame)
    self.title = "Lexer"
 
@@ -40,6 +42,7 @@ end
 function lexer:on_html_link_clicked(event)
    local href = event:GetLinkInfo():GetHref()
    print("HREF", href)
+   self.app.widget_search:search_word("dood")
 end
 
 return lexer
