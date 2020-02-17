@@ -5,7 +5,10 @@ local input = require("app.input")
 local lexer = require("app.lexer")
 local search = require("app.search")
 local display = require("app.display")
+local debug_server = require("app.debug_server")
 local repl = require("app.repl")
+
+local ID = require("lib.ids")
 
 local app = class.class("app")
 
@@ -18,11 +21,13 @@ function app:init()
    self.width = 800
    self.height = 600
 
+   print(ID.LEX)
    local file_menu = wx.wxMenu()
-   file_menu:Append(wx.wxID_EXIT, "E&xit", "Quit the program")
+   file_menu:Append(ID.LEX, "&Lex Text", "Send current text to the lexer")
+   file_menu:Append(ID.EXIT, "E&xit", "Quit the program")
 
    local help_menu = wx.wxMenu()
-   help_menu:Append(wx.wxID_ABOUT, "&About", "About this program")
+   help_menu:Append(ID.ABOUT, "&About", "About this program")
 
    self.menu_bar = wx.wxMenuBar()
    self.menu_bar:Append(file_menu, "&File")
@@ -33,12 +38,12 @@ function app:init()
                            wx.wxDEFAULT_FRAME_STYLE)
    self.frame.MenuBar = self.menu_bar
 
-   self.ID_STATUS_BAR = 2
-   self.frame:CreateStatusBar(self.ID_STATUS_BAR)
+   self.frame:CreateStatusBar(ID.STATUS_BAR)
    self.frame:SetStatusText("Welcome to wxLua.")
 
-   self:connect_frame(wx.wxID_EXIT, wx.wxEVT_COMMAND_MENU_SELECTED, self, "on_menu_exit")
-   self:connect_frame(wx.wxID_ABOUT, wx.wxEVT_COMMAND_MENU_SELECTED, self, "on_menu_about")
+   self:connect_frame(ID.LEX, wx.wxEVT_COMMAND_MENU_SELECTED, self, "on_menu_lex")
+   self:connect_frame(ID.EXIT, wx.wxEVT_COMMAND_MENU_SELECTED, self, "on_menu_exit")
+   self:connect_frame(ID.ABOUT, wx.wxEVT_COMMAND_MENU_SELECTED, self, "on_menu_about")
 
    self.wx_app.TopWindow = self.frame
    self.frame:Show(true)
@@ -52,9 +57,13 @@ function app:init()
    self.widget_search = search:new(self, self.frame)
    self.widget_repl = repl:new(self, self.frame)
 
+   self.debug_server = debug_server:new(self, 4567)
+
    self.aui:Update();
 
    self:connect_frame(nil, wx.wxEVT_DESTROY, self, "on_destroy")
+
+   self.widget_repl:activate()
 end
 
 function app:add_pane(ctrl, args)
@@ -72,7 +81,11 @@ function app:add_pane(ctrl, args)
 end
 
 function app:connect(id, event_id, receiver, cb)
-   self.wx_app:Connect(id, event_id, function(event) receiver[cb](receiver, event) end)
+   if id == nil then
+      self.wx_app:Connect(event_id, function(event) receiver[cb](receiver, event) end)
+   else
+      self.wx_app:Connect(id, event_id, function(event) receiver[cb](receiver, event) end)
+   end
 end
 
 function app:connect_frame(id, event_id, receiver, cb)
@@ -80,6 +93,12 @@ function app:connect_frame(id, event_id, receiver, cb)
       self.frame:Connect(event_id, function(event) receiver[cb](receiver, event) end)
    else
       self.frame:Connect(id, event_id, function(event) receiver[cb](receiver, event) end)
+   end
+end
+
+function app:print(fmt, ...)
+   if self.widget_repl then
+      self.widget_repl:DisplayShellMsg(string.format(fmt, ...))
    end
 end
 
@@ -99,15 +118,21 @@ function app:on_destroy(event)
    end
 end
 
+function app:on_menu_lex(_)
+   self.widget_input:send_to_lexer()
+end
+
 function app:on_menu_exit(_)
    self.frame:Close()
 end
 
-function app:on_menu_about(_)
-   local message = ("%s ver. %s\n%s built with %s\n%s %s")
+function app:get_info()
+   return ("%s ver. %s\n%s built with %s\n%s %s")
       :format(self.name, self.version, wxlua.wxLUA_VERSION_STRING, wx.wxVERSION_STRING, jit.version, jit.arch)
+end
 
-   wx.wxMessageBox(message,
+function app:on_menu_about(_)
+   wx.wxMessageBox(self:get_info(),
                    ("About %s"):format(self.name),
                    wx.wxOK + wx.wxICON_INFORMATION,
                    self.frame)

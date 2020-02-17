@@ -179,4 +179,59 @@ function util.escape_magic(s)
    return s:gsub("([%(%)%.%%%+%-%*%?%[%^%$%]])", "%%%1")
 end
 
+function util.trim(str, chars)
+  if not chars then return str:match("^[%s]*(.-)[%s]*$") end
+  chars = util.escape_magic(chars)
+  return str:match("^[" .. chars .. "]*(.-)[" .. chars .. "]*$")
+end
+
+function util.shallow_copy(t)
+  local rtn = {}
+  for k, v in pairs(t) do rtn[k] = v end
+  return rtn
+end
+
+-- from lume
+function util.hotload(modname)
+   -- the module name has to match exactly in the way it was
+   -- originally required. this is because requiring a different path
+   -- that refers to the same module will generate a completely new
+   -- table for it in package.loaded.
+   if package.loaded[modname] == nil then
+      error("no module " .. tostring(modname) .. " loaded")
+   end
+   local oldglobal = util.shallow_copy(_G)
+   local updated = {}
+   local function update(old, new)
+      if updated[old] then return end
+      updated[old] = true
+      local oldmt, newmt = getmetatable(old), getmetatable(new)
+      if oldmt and newmt then update(oldmt, newmt) end
+      for k, v in pairs(new) do
+         if type(v) == "table" then update(old[k], v) else old[k] = v end
+      end
+   end
+   local err = nil
+   local function onerror(e)
+      for k in pairs(_G) do _G[k] = oldglobal[k] end
+      err = util.trim(e)
+   end
+   local ok, oldmod = pcall(require, modname)
+   oldmod = ok and oldmod or nil
+   xpcall(function()
+         package.loaded[modname] = nil
+         local newmod = require(modname)
+         if type(oldmod) == "table" then update(oldmod, newmod) end
+         for k, v in pairs(oldglobal) do
+            if v ~= _G[k] and type(v) == "table" then
+               update(v, _G[k])
+               _G[k] = v
+            end
+         end
+          end, onerror)
+   package.loaded[modname] = oldmod
+   if err then return nil, err end
+   return oldmod
+end
+
 return util

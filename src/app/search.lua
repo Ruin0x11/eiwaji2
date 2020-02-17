@@ -105,13 +105,10 @@ function search:init(app, frame)
                    MinSize = wx.wxSize(340, 300),
                    "Right"
                 })
-
-   self:search_word("猫")
 end
 
 function search:search_word(word)
-   print("Search", word)
-   self.data[#self.data+1] = {"猫", "ねこ", "cat"}
+   self.data = {{word.word, word.word, "word"}}
    self.gridtable = make_gridtable(self.data)
    self.grid:SetTable(self.gridtable, true)
    self.grid:ForceRefresh()

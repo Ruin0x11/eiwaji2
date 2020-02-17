@@ -1,7 +1,7 @@
-fun = require("thirdparty/fun")
-inspect = require("thirdparty/inspect")
+fun = require("thirdparty.fun")
+inspect = require("thirdparty.inspect")
 
-class = require("src/class")
+class = require("src.class")
 
 app = nil
 
@@ -41,8 +41,8 @@ require("thirdparty/strict")
 package.path = package.path .. ";./?/init.lua;./src/?.lua;./src/?/init.lua"
 
 local wx = require("wx")
-local wxhacks = require("src/wxhacks")
+local wxhacks = require("wxhacks")
 wxhacks(wx)
 
-app = require("src/app"):new()
+app = require("app.init"):new()
 app:run()

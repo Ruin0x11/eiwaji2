@@ -16,5 +16,8 @@ return {
   stylesoutshell = nil,
   debugger = {
     maxdatalength = 256,
+  },
+  lexer = {
+     mecab_opts = nil
   }
 }

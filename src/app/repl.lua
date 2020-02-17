@@ -7,6 +7,8 @@ local wxstc = require("wxstc")
 local util = require("lib.util")
 local styled_text_ctrl = require("widget.styled_text_ctrl")
 
+local ID = require("lib.ids")
+
 local tint = function(c) return c end
 local markers = {
   message = {3, wxstc.wxSTC_MARK_CHARACTER+(' '):byte(), {0, 0, 0}, {220, 220, 220}},
@@ -54,6 +56,8 @@ local function concat(sep, ...)
 end
 
 function repl:init(app, frame)
+   self.app = app
+
    local console = styled_text_ctrl.create(frame, wx.wxID_ANY,
                                            wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxBORDER_NONE)
 
@@ -315,8 +319,7 @@ function repl:createenv()
 
   local os = {
     exit = function()
-      error("exit")
-      -- app.frame:AddPendingEvent(wx.wxCommandEvent(wx.wxEVT_COMMAND_MENU_SELECTED, wx.wxID_EXIT))
+      self.app.frame:AddPendingEvent(wx.wxCommandEvent(wx.wxEVT_COMMAND_MENU_SELECTED, ID.EXIT))
     end,
   }
   env.os = setmetatable(os, {__index = _G.os})
@@ -404,13 +407,7 @@ function repl:ShellExecuteCode(code)
 end
 
 function repl:displayShellIntro()
-  self:DisplayShellMsg(TR("Welcome to the interactive Lua interpreter.").." "
-    ..TR("Enter Lua code and press Enter to run it.").." "
-    ..TR("Use Shift-Enter for multiline code.").."\n"
-    ..TR("Use 'clear' to clear the shell output and the history.").." "
-    ..TR("Use 'reset' to clear the environment.").."\n"
-    ..TR("Prepend '=' to show complex values on multiple lines.").." "
-    ..TR("Prepend '!' to force local execution."))
+  self:DisplayShellMsg(self.app:get_info())
   self:DisplayShellPrompt('')
 end
 
@@ -440,8 +437,8 @@ function repl:bind_console_events()
            if modifiers == wx.wxMOD_NONE then
              local promptText = self:getPromptText()
              self:setPromptText(self:getNextHistoryLine(false, promptText))
-             -- move to the beginning of the updated prompt
-             self.console:GotoPos(self.console:PositionFromLine(self:getPromptLine()))
+             -- move to the end of the updated prompt
+             self.console:GotoPos(self.console:GetLineEndPosition(self:getPromptLine()))
            end
            return
          elseif key == wx.WXK_DOWN or key == wx.WXK_NUMPAD_DOWN then
@@ -600,11 +597,25 @@ function repl:bind_console_events()
    self.console.Reset = function()
       self.env = self:createenv() -- recreate the environment to "forget" all changes in it
    end
+
+  self.console.Activate = function(_)
+    local uimgr = self.app.aui
+    local pane = uimgr:GetPane(nb)
+    if pane:IsOk() and not pane:IsShown() then
+      pane:Show(true)
+      uimgr:Update()
+    end
+    return true
+  end
 end
 
 function repl:inputEditable(line)
    return self:caretOnPromptLine(false, line) and
       not (self.console:LineFromPosition(self.console:GetSelectionStart()) < self:getPromptLine())
+end
+
+function repl:activate()
+   return self.console:SetFocus()
 end
 
 return repl

@@ -1,5 +1,7 @@
-local wx = require("wx")
+local config = require("config")
 local lexer_html = require("lib.lexer_html")
+local wx = require("wx")
+local yukie = require("thirdparty.yukie")
 
 local lexer = class.class("lexer")
 
@@ -8,6 +10,7 @@ function lexer:init(app, frame)
 
    self.html = wx.wxLuaHtmlWindow(frame)
    self.title = "Lexer"
+   self.results = {}
 
    self.html.OnSetTitle = function(self_, title)
       frame.Title = self.title .. " - " .. title
@@ -24,13 +27,13 @@ function lexer:init(app, frame)
                    BestSize = wx.wxSize(600, 200),
                    "Bottom"
                 })
-
-   self:lex_text("dood")
 end
 
 function lexer:lex_text(text)
-   local mecab = {}
-   local html = lexer_html.convert(mecab)
+   self.app:print("Lex text: %s", text)
+
+   self.results = yukie.parse_to_words(text, {"-Owakati", "-N2"})
+   local html = lexer_html.convert(self.results)
 
    self.html:SetPage(html)
 end
@@ -41,8 +44,11 @@ end
 
 function lexer:on_html_link_clicked(event)
    local href = event:GetLinkInfo():GetHref()
-   print("HREF", href)
-   self.app.widget_search:search_word("dood")
+   local word = self.results[tonumber(href)]
+   if word == nil then
+      error("missing word " .. href)
+   end
+   self.app.widget_search:search_word(word)
 end
 
 return lexer
