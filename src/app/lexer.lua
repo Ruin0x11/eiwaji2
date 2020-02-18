@@ -2,6 +2,7 @@ local config = require("config")
 local lexer_html = require("lib.lexer_html")
 local wx = require("wx")
 local yukie = require("thirdparty.yukie")
+local mecab_util = require("lib.mecab_util")
 
 local lexer = class.class("lexer")
 
@@ -30,9 +31,7 @@ function lexer:init(app, frame)
 end
 
 function lexer:lex_text(text)
-   self.app:print("Lex text: %s", text)
-
-   self.results = yukie.parse_to_words(text, {"-Owakati", "-N2"})
+   self.results = yukie.parse_to_words(text, config.lexer.mecab_opts)
    local html = lexer_html.convert(self.results)
 
    self.html:SetPage(html)
@@ -48,7 +47,24 @@ function lexer:on_html_link_clicked(event)
    if word == nil then
       error("missing word " .. href)
    end
-   self.app.widget_search:search_word(word)
+
+   self.app:print("Word: %s", inspect(word))
+
+   local ctxt = {}
+
+   if word.lemma ~= "*" then
+      ctxt[#ctxt+1] = { display = ("%s (lemma)"):format(word.lemma), term = word.lemma }
+   end
+   ctxt[#ctxt+1] = { display = ("%s (word)"):format(word.word), term = word.word }
+
+   for i, token in ipairs(word.tokens) do
+      ctxt[#ctxt+1] = {
+         display = ("%s (token %d)"):format(token.lemma, i),
+         term = token.lemma
+      }
+   end
+
+   self.app.widget_search:set_context(ctxt)
 end
 
 return lexer

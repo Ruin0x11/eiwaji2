@@ -93,13 +93,17 @@ function repl:init(app, frame)
 
    self.env = self:createenv()
 
-   app:add_pane(self.console,
-                {
-                   Name = "REPL",
-                   Caption = "REPL",
-                   BestSize = wx.wxSize(800, 100),
-                   "Bottom"
-                })
+   self.app:add_pane(self.console,
+                    {
+                       Name = "REPL",
+                       Caption = "REPL",
+                       BestSize = wx.wxSize(300, 400),
+                       "Left"
+                    })
+
+   self.app:connect_frame(nil, wx.wxEVT_DESTROY, self, "on_destroy")
+
+   self:load_history()
 
    self:displayShellIntro()
 end
@@ -211,6 +215,50 @@ function repl:getNextHistoryMatch(promptText)
   assert(false, "getNextHistoryMatch coudn't find a proper match")
 end
 
+local HISTORY_FILE = "repl_history.txt"
+function repl:save_history()
+   local f = io.open(HISTORY_FILE, "w")
+
+   currentHistory = -1
+   local line = self:getNextHistoryLine(true)
+   while line ~= "" do
+      f:write(line)
+      f:write("\n")
+      line = self:getNextHistoryLine(true)
+   end
+
+   f:close()
+end
+
+function repl:load_history()
+   local f = io.open(HISTORY_FILE, "r")
+
+   for line in f:lines() do
+      local insertAt = self.console:PositionFromLine(self:getPromptLine())
+      local insertLineAt = self:getPromptLine()
+      local text = self.console.useraw and line or util.fix_utf8(line, function (s) return '\\'..string.byte(s) end)
+      local promptLine = self:getPromptLine()
+      local lines = self.console:GetLineCount()
+
+      self.console:InsertTextDyn(insertAt, text .. "\n")
+      local linesAdded = self.console:GetLineCount() - lines
+      for insert_line = insertLineAt, insertLineAt + linesAdded - 1 do
+         self.console:MarkerAdd(insert_line, PROMPT_MARKER)
+      end
+
+      self.console:MarkerDelete(promptLine, PROMPT_MARKER)
+      self.console:MarkerAdd(promptLine+linesAdded, PROMPT_MARKER)
+      self.console:GotoPos(self.console:GetLength())
+   end
+
+   self.console:EmptyUndoBuffer()
+   self.console:EnsureVisibleEnforcePolicy(self.console:GetLineCount()-1)
+
+   currentHistory = self:getPromptLine()
+
+   f:close()
+end
+
 local partial = false
 function repl:shellPrint(marker, text, newline)
   if not text or text == "" then return end -- return if nothing to print
@@ -236,6 +284,8 @@ function repl:shellPrint(marker, text, newline)
   self.console:EmptyUndoBuffer() -- don't allow the user to undo shell text
   self.console:GotoPos(self.console:GetLength())
   self.console:EnsureVisibleEnforcePolicy(self.console:GetLineCount()-1)
+
+  self:save_history()
 end
 
 repl.displayShellDirect = function (self, ...) self:shellPrint(nil, concat("\t", ...), true) end
@@ -330,6 +380,9 @@ function repl:createenv()
   env.RELFILE = relativeFilename
   env.RELPATH = relativeFilepath
 
+  env.config = require "config"
+  env.util = require "lib.util"
+
   return env
 end
 
@@ -407,8 +460,8 @@ function repl:ShellExecuteCode(code)
 end
 
 function repl:displayShellIntro()
-  self:DisplayShellMsg(self.app:get_info())
   self:DisplayShellPrompt('')
+  self:DisplayShellMsg(self.app:get_info())
 end
 
 function repl:bind_console_events()
@@ -598,15 +651,15 @@ function repl:bind_console_events()
       self.env = self:createenv() -- recreate the environment to "forget" all changes in it
    end
 
-  self.console.Activate = function(_)
-    local uimgr = self.app.aui
-    local pane = uimgr:GetPane(nb)
-    if pane:IsOk() and not pane:IsShown() then
-      pane:Show(true)
-      uimgr:Update()
-    end
-    return true
-  end
+  -- self.console.Activate = function(_)
+  --   local uimgr = self.app.aui
+  --   local pane = uimgr:GetPane(nb)
+  --   if pane:IsOk() and not pane:IsShown() then
+  --     pane:Show(true)
+  --     uimgr:Update()
+  --   end
+  --   return true
+  -- end
 end
 
 function repl:inputEditable(line)
@@ -616,6 +669,19 @@ end
 
 function repl:activate()
    return self.console:SetFocus()
+end
+
+function repl:set_variable(k, v)
+   self.env[k] = v
+end
+
+--
+-- Events
+--
+
+function repl:on_destroy()
+   print("Saving history.")
+   self:save_history()
 end
 
 return repl

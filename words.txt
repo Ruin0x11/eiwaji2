@@ -1,0 +1,5 @@
+継続中
+offer option to search per lemma in token
+
+売られちゃう
+should show up as 売られる

@@ -1,12 +1,15 @@
 local wx = require("wx")
 local wxaui = require("wxaui")
 local wxlua = require("wxlua")
+local util = require("lib.util")
 local input = require("app.input")
 local lexer = require("app.lexer")
 local search = require("app.search")
 local display = require("app.display")
 local debug_server = require("app.debug_server")
+local clipboard_watcher = require("app.clipboard_watcher")
 local repl = require("app.repl")
+local config = require("config")
 
 local ID = require("lib.ids")
 
@@ -23,7 +26,8 @@ function app:init()
 
    print(ID.LEX)
    local file_menu = wx.wxMenu()
-   file_menu:Append(ID.LEX, "&Lex Text", "Send current text to the lexer")
+   file_menu:Append(ID.LEX, "&Lex Text\tCTRL+L", "Send current text to the lexer")
+   file_menu:AppendCheckItem(ID.WATCH_CLIPBOARD, "&Watch Clipboard", "Automatically lex text when the clipboard changes.")
    file_menu:Append(ID.EXIT, "E&xit", "Quit the program")
 
    local help_menu = wx.wxMenu()
@@ -42,6 +46,7 @@ function app:init()
    self.frame:SetStatusText("Welcome to wxLua.")
 
    self:connect_frame(ID.LEX, wx.wxEVT_COMMAND_MENU_SELECTED, self, "on_menu_lex")
+   self:connect_frame(ID.WATCH_CLIPBOARD, wx.wxEVT_COMMAND_MENU_SELECTED, self, "on_menu_watch_clipboard")
    self:connect_frame(ID.EXIT, wx.wxEVT_COMMAND_MENU_SELECTED, self, "on_menu_exit")
    self:connect_frame(ID.ABOUT, wx.wxEVT_COMMAND_MENU_SELECTED, self, "on_menu_about")
 
@@ -51,13 +56,17 @@ function app:init()
    self.aui = wxaui.wxAuiManager()
    self.aui:SetManagedWindow(self.frame);
 
+   self.widget_repl = repl:new(self, self.frame)
    self.widget_input = input:new(self, self.frame)
    self.widget_lexer = lexer:new(self, self.frame)
    self.widget_display = display:new(self, self.frame)
    self.widget_search = search:new(self, self.frame)
-   self.widget_repl = repl:new(self, self.frame)
 
    self.debug_server = debug_server:new(self, 4567)
+   self.clipboard_watcher = clipboard_watcher:new(self, config.clipboard.watch_delay)
+   if config.clipboard.watch_on_startup then
+      self.clipboard_watcher:start()
+   end
 
    self.aui:Update();
 
@@ -80,20 +89,12 @@ function app:add_pane(ctrl, args)
    self.aui:AddPane(ctrl, info)
 end
 
-function app:connect(id, event_id, receiver, cb)
-   if id == nil then
-      self.wx_app:Connect(event_id, function(event) receiver[cb](receiver, event) end)
-   else
-      self.wx_app:Connect(id, event_id, function(event) receiver[cb](receiver, event) end)
-   end
+function app:connect(...)
+   return util.connect(self.wx_app, ...)
 end
 
-function app:connect_frame(id, event_id, receiver, cb)
-   if id == nil then
-      self.frame:Connect(event_id, function(event) receiver[cb](receiver, event) end)
-   else
-      self.frame:Connect(id, event_id, function(event) receiver[cb](receiver, event) end)
-   end
+function app:connect_frame(...)
+   return util.connect(self.frame, ...)
 end
 
 function app:print(fmt, ...)
@@ -120,6 +121,16 @@ end
 
 function app:on_menu_lex(_)
    self.widget_input:send_to_lexer()
+end
+
+function app:on_menu_watch_clipboard(event)
+   if event:IsChecked() then
+      self.frame:SetStatusText("Watching clipboard.")
+      self.clipboard_watcher:start()
+   else
+      self.frame:SetStatusText("Not watching clipboard.")
+      self.clipboard_watcher:stop()
+   end
 end
 
 function app:on_menu_exit(_)

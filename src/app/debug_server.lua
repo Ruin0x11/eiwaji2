@@ -7,10 +7,11 @@ local debug_server = class.class("debug_server")
 
 function debug_server:init(app, port)
    self.app = app
-   self.timer = wx.wxTimer(app.frame)
+   self.id = util.new_id()
+   self.timer = wx.wxTimer(app.frame, self.id)
    self.port = port
 
-   self.app:connect(nil, wx.wxEVT_TIMER, self, "on_timer")
+   self.app:connect(self.id, wx.wxEVT_TIMER, self, "on_timer")
 
    self:start()
 end
@@ -103,6 +104,8 @@ function commands.hotload(self, require_path)
 
    if not success then
       return error_result(status)
+   else
+      self.app:print("Hotloaded %s.", require_path)
    end
 
    return {}
@@ -113,6 +116,10 @@ function commands.signature(self)
 end
 
 function debug_server:on_timer(event)
+   if event:GetTimer() ~= self.timer then
+      return
+   end
+
    local client, _, err = self.server:accept()
 
    if err and err ~= "timeout" then

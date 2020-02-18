@@ -191,6 +191,28 @@ function util.shallow_copy(t)
   return rtn
 end
 
+local function table_replace_with(tbl, other)
+   if tbl == other then
+      return tbl
+   end
+
+   local mt = getmetatable(tbl)
+   local other_mt = getmetatable(other)
+   if mt and other_mt then
+      table_replace_with(mt, other_mt)
+   end
+
+   for k, _ in pairs(tbl) do
+      tbl[k] = nil
+   end
+
+   for k, v in pairs(other) do
+      tbl[k] = v
+   end
+
+   return tbl
+end
+
 -- from lume
 function util.hotload(modname)
    -- the module name has to match exactly in the way it was
@@ -198,7 +220,8 @@ function util.hotload(modname)
    -- that refers to the same module will generate a completely new
    -- table for it in package.loaded.
    if package.loaded[modname] == nil then
-      error("no module " .. tostring(modname) .. " loaded")
+      print("no module named " .. modname .. ", requiring")
+      return require(modname)
    end
    local oldglobal = util.shallow_copy(_G)
    local updated = {}
@@ -221,7 +244,8 @@ function util.hotload(modname)
    xpcall(function()
          package.loaded[modname] = nil
          local newmod = require(modname)
-         if type(oldmod) == "table" then update(oldmod, newmod) end
+         --if type(oldmod) == "table" then update(oldmod, newmod) end
+         if type(oldmod) == "table" then table_replace_with(oldmod, newmod) end
          for k, v in pairs(oldglobal) do
             if v ~= _G[k] and type(v) == "table" then
                update(v, _G[k])
@@ -232,6 +256,59 @@ function util.hotload(modname)
    package.loaded[modname] = oldmod
    if err then return nil, err end
    return oldmod
+end
+
+function util.split(s, re)
+ local i1, ls = 1, { }
+  if not re then re = '%s+' end
+  if re == '' then return { s } end
+  while true do
+    local i2, i3 = s:find(re, i1)
+    if not i2 then
+      local last = s:sub(i1)
+      if last ~= '' then ls[#ls+1] = last end
+      if #ls == 1 and ls[1] == '' then
+        return  { }
+      else
+        return ls
+      end
+    end
+    ls[#ls+1] = s:sub(i1, i2 - 1)
+    i1 = i3 + 1
+  end
+end
+
+-- Generate a unique new wxWindowID
+local ID_IDCOUNTER = wx.wxID_HIGHEST + 1
+function util.new_id()
+  ID_IDCOUNTER = math.floor(ID_IDCOUNTER + 1) -- make sure it's integer
+  return ID_IDCOUNTER
+end
+
+function util.connect(...)
+   local t = {...}
+   local emitter, id, event_id, receiver, cb
+   if #t == 5 then
+      emitter = t[1]
+      id = t[2]
+      event_id = t[3]
+      receiver = t[4]
+      cb = t[5]
+   elseif #t == 4 then
+      id = nil
+      emitter = t[1]
+      event_id = t[2]
+      receiver = t[3]
+      cb = t[4]
+   else
+      error("connect must receive 4 or 5 arguments, got " .. tostring(#t))
+   end
+
+   if id == nil then
+      emitter:Connect(event_id, function(event) receiver[cb](receiver, event) end)
+   else
+      emitter:Connect(id, event_id, function(event) receiver[cb](receiver, event) end)
+   end
 end
 
 return util

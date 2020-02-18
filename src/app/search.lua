@@ -1,11 +1,14 @@
 local wx = require("wx")
+local config = require("config")
+local db = require("lib.db")
+local gridtable = require("widget.gridtable")
+local util = require("lib.util")
 
 local search = class.class("search")
 
 local COL_KANJI   = 0
 local COL_KANA    = 1
 local COL_MEANING = 2
-local MAX_COLS    = 3
 
 local COLS = {
    [COL_KANJI] = { name = "Kanji", type = wx.wxGRID_VALUE_STRING, width = 80 },
@@ -13,105 +16,86 @@ local COLS = {
    [COL_MEANING] = { name = "Meaning", type = wx.wxGRID_VALUE_STRING, width = 180 },
 }
 
-local function make_gridtable(data)
-   local gridtable = wx.wxLuaGridTableBase()
-
-    data.gridtable = gridtable
-    gridtable.GetTypeName = function( self, row, col )
-        return string.format("%s:80", wx.wxGRID_VALUE_STRING)
-    end
-
-    gridtable.GetNumberRows = function( self )
-       print(#data)
-        return #data
-    end
-
-    gridtable.GetNumberCols = function( self )
-        return MAX_COLS
-    end
-
-    gridtable.IsEmptyCell = function( self, row, col )
-        return false
-    end
-
-    gridtable.GetValue = function( self, row, col )
-        return data[row+1][col+1]
-    end
-
-    gridtable.SetValue = function( self, row, col, value )
-        data[row+1][col+1] = value
-    end
-
-    gridtable.CanGetValueAs = function( self, row, col, typeName )
-        if typeName == wx.wxGRID_VALUE_STRING then
-           return true
-        end
-        return false
-    end
-
-    gridtable.CanSetValueAs = function( self, row, col, typeName )
-        return self:CanGetValueAs(row, col, typeName)
-    end
-
-    gridtable.GetValueAsLong = function( self, row, col )
-       return -1
-    end
-
-    gridtable.GetValueAsBool = function( self, row, col )
-       return false
-    end
-
-    gridtable.SetValueAsLong = function( self, row, col, value )
-    end
-
-    gridtable.SetValueAsBool = function( self, row, col, value )
-    end
-
-    gridtable.GetColLabelValue = function( self, col )
-        return COLS[col].name
-    end
-
-   return gridtable
-end
-
 function search:init(app, frame)
    self.app = app
 
-   self.data = {}
-   self.data[1] = {"猫", "ねこ", "cat"}
-   self.data[2] = {"猫", "ねこ", "cat"}
+   self.choices = {}
+   self.data = {{"猫", "ねこ", "cat"}}
 
-   self.grid = wx.wxGrid(frame, wx.wxID_ANY)
-   self.gridtable = make_gridtable(self.data)
+   self.panel = wx.wxPanel(frame, wx.wxID_ANY)
+   self.sizer = wx.wxBoxSizer(wx.wxVERTICAL)
 
-   self.grid:SetTable(self.gridtable, true)
-   self.grid:SetRowLabelSize(0)
-   self.grid:SetColLabelAlignment(wx.wxALIGN_CENTRE, wx.wxALIGN_CENTRE)
+   self.choice_box = wx.wxComboBox(self.panel, wx.wxID_ANY, "",
+                                    wx.wxDefaultPosition, wx.wxDefaultSize,
+                                    {}, wx.wxTE_READONLY)
+   self.sizer:Add(self.choice_box, 0, wx.wxEXPAND, 0)
 
-   local attr_ro = wx.wxGridCellAttr()
-   attr_ro:SetReadOnly()
+   self.grid = wx.wxGrid(self.panel, wx.wxID_ANY)
+   self.gridtable = gridtable.create(COLS, self.data, self.grid)
+   self.sizer:Add(self.grid, 1, wx.wxEXPAND, 5)
 
-   for col=0,MAX_COLS-1 do
-      self.grid:SetColSize(col, COLS[col].width)
-      self.grid:SetColAttr(col, attr_ro)
-   end
+   self.panel:SetSizer(self.sizer)
+   self.sizer:SetSizeHints(self.panel)
 
-   self.grid:Connect(wx.wxEVT_GRID_SELECT_CELL, function(event) self:on_grid_select_cell(event) end)
+   util.connect(self.grid, wx.wxEVT_GRID_SELECT_CELL, self, "on_grid_select_cell")
+   util.connect(self.choice_box, wx.wxEVT_COMBOBOX, self, "on_combobox")
 
-   app:add_pane(self.grid,
+   app:add_pane(self.panel,
                 {
                    Name = "Search",
                    Caption = "Search",
                    MinSize = wx.wxSize(340, 300),
                    "Right"
                 })
+
+   self.db = db:new(config.db_path)
 end
 
-function search:search_word(word)
-   self.data = {{word.word, word.word, "word"}}
-   self.gridtable = make_gridtable(self.data)
-   self.grid:SetTable(self.gridtable, true)
+function search:set_context(words)
+   self.choices = words or {}
+
+   -- { display = "猫 (lemma)", term = "猫" }
+
+   local display_choices = fun.iter(self.choices):extract("display")
+   self.choice_box:Clear()
+   for _, disp in display_choices:unwrap() do
+      self.choice_box:Append(disp)
+   end
+
+   self.choice_box:SetSelection(0)
+   self:search_word(1)
+end
+
+function search:search_word(idx)
+   local word = self.choices[idx]
+   if word == nil then
+      return
+   end
+
+   local conv = function(entry)
+      local kanjis = fun.iter(entry.kanjis):extract("reading"):to_list()
+      local readings = fun.iter(entry.readings):extract("reading"):to_list()
+      local senses = fun.iter(entry.senses)
+         :map(function(sense)
+               return table.concat(sense.glosses, ";")
+             end)
+         :to_list()
+      return {
+         table.concat(kanjis, ";"),
+         table.concat(readings, ";"),
+         table.concat(senses, ";"),
+      }
+   end
+
+   local results = self.db:search(word.term)
+
+   self.data = fun.iter(results):map(conv):to_list()
+   self.app:print("Results: %s", inspect(results))
+
+   self.gridtable = gridtable.create(COLS, self.data, self.grid)
    self.grid:ForceRefresh()
+
+   self:on_grid_select_cell(0)
 end
 
 --
@@ -119,9 +103,32 @@ end
 --
 
 function search:on_grid_select_cell(event)
-   local row = event:GetRow()
-   local col = event:GetCol()
-   self.app.widget_display:set_text(("%d %d %s"):format(row, col, self.data[row+1][1]))
+   -- wxGridEvent doesn't have a constructor...
+   local row
+   if type(event) == "userdata" then
+      row = event:GetRow()
+   else
+      row = event
+   end
+
+   local data = self.data[row+1]
+   if data == nil then
+      self.app.widget_display:set_text("")
+      return
+   end
+
+   local body = ([[
+Kanji: %s
+Kana: %s
+Meaning: %s
+]]):format(data[1], data[2], data[3])
+
+   self.app.widget_display:set_text(body)
+end
+
+function search:on_combobox()
+   local idx = self.choice_box:GetSelection()
+   self:search_word(idx+1)
 end
 
 return search

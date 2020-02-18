@@ -6,12 +6,7 @@
 local util = require("lib.util")
 local wx = require("wx")
 
--- Generate a unique new wxWindowID
-local ID_IDCOUNTER = wx.wxID_HIGHEST + 1
-local function NewID()
-  ID_IDCOUNTER = math.floor(ID_IDCOUNTER + 1) -- make sure it's integer
-  return ID_IDCOUNTER
-end
+local NewID = util.new_id
 
 -- some Ubuntu versions (Ubuntu 13.10) ignore labels on stock menu IDs,
 -- so don't use stock IDs on Linux (http://trac.wxwidgets.org/ticket/15958)
@@ -19,6 +14,7 @@ local linux = util.os_name() == "Unix"
 
 local ids = {
    ID_LEX              = NewID(),
+   ID_WATCH_CLIPBOARD  = NewID(),
    -- File menu
    ID_NEW              = linux and NewID() or wx.wxID_NEW,
    ID_OPEN             = linux and NewID() or wx.wxID_OPEN,
