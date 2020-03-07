@@ -62,10 +62,10 @@ local function error_result(err)
    }
 end
 
-function commands.run(self, text)
+function commands.run(self, args)
    local status, success, result
 
-   local s, err = loadstring(text)
+   local s, err = loadstring(args.text)
    if s then
       success, result = xpcall(s, function(e) return e .. "\n" .. debug.traceback(2) end)
       if success then
@@ -99,15 +99,19 @@ end
 -- {
 --   "success":true
 -- }
-function commands.hotload(self, require_path)
-   local success, status = xpcall(util.hotload, debug.traceback, require_path)
+function commands.hotload(self, args)
+   local success, status = xpcall(util.hotload, debug.traceback, args.require_path)
 
    if not success then
       return error_result(status)
    else
-      self.app:print("Hotloaded %s.", require_path)
+      self.app:print("Hotloaded %s.", args.require_path)
    end
 
+   return {}
+end
+
+function commands.help(self, args)
    return {}
 end
 
@@ -135,8 +139,8 @@ function debug_server:on_timer(event)
       -- JSON should have this format:
       --
       -- {
-      --   "command":"help",
-      --   "content":"Chara.create"
+      --   "command": "help",
+      --   "args": { "content": "Chara.create" }
       -- }
 
       local ok, req = pcall(json.decode, text)
@@ -144,19 +148,20 @@ function debug_server:on_timer(event)
          result = error_result(req)
       else
          cmd_name = req.command
-         local content = req.content
-         if type(cmd_name) ~= "string" or type(content) ~= "string" then
-            result = error_result("Request must have 'command' and 'content' keys")
+         local args = req.args
+         if type(cmd_name) ~= "string" or type(args) ~= "table" then
+            result = error_result("Request must have 'command' string and 'args' table, got: " .. text)
          else
             local cmd = commands[cmd_name]
             if cmd == nil then
                result = error_result("No command named " .. cmd_name)
             else
-               local ok, err = xpcall(cmd, debug.traceback, self, content)
+               local ok, err = xpcall(cmd, debug.traceback, self, args)
                if not ok then
                   result = error_result(err)
                else
                   result = err
+                  result.command = cmd_name
                   if result.success == nil then
                      result.success = true
                   end

@@ -15,6 +15,8 @@ local linux = util.os_name() == "Unix"
 local ids = {
    ID_LEX              = NewID(),
    ID_WATCH_CLIPBOARD  = NewID(),
+   ID_ATTACH_PANES     = NewID(),
+   ID_REDOCK_PANES     = NewID(),
    -- File menu
    ID_NEW              = linux and NewID() or wx.wxID_NEW,
    ID_OPEN             = linux and NewID() or wx.wxID_OPEN,

@@ -93,13 +93,13 @@ function repl:init(app, frame)
 
    self.env = self:createenv()
 
-   self.app:add_pane(self.console,
-                    {
-                       Name = "REPL",
-                       Caption = "REPL",
-                       BestSize = wx.wxSize(300, 400),
-                       "Left"
-                    })
+   self.pane = self.app:add_pane(self.console,
+                                {
+                                  Name = "REPL",
+                                  Caption = "REPL",
+                                  BestSize = wx.wxSize(300, 400),
+                                  "Bottom"
+                                })
 
    self.app:connect_frame(nil, wx.wxEVT_DESTROY, self, "on_destroy")
 
@@ -231,7 +231,10 @@ function repl:save_history()
 end
 
 function repl:load_history()
-   local f = io.open(HISTORY_FILE, "r")
+   local f, err = io.open(HISTORY_FILE, "r")
+   if not f then
+       return
+   end
 
    for line in f:lines() do
       local insertAt = self.console:PositionFromLine(self:getPromptLine())
@@ -660,6 +663,8 @@ function repl:bind_console_events()
   --   end
   --   return true
   -- end
+
+  util.connect(self.console, wx.wxEVT_SIZE, self, "on_size")
 end
 
 function repl:inputEditable(line)
@@ -678,6 +683,10 @@ end
 --
 -- Events
 --
+
+function repl:on_size()
+  self.console:GotoPos(self.console:GetLength())
+end
 
 function repl:on_destroy()
    print("Saving history.")

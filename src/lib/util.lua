@@ -175,44 +175,6 @@ function util.os_name()
    return wx.wxPlatformInfo.Get():GetOperatingSystemFamilyName()
 end
 
-function util.escape_magic(s)
-   return s:gsub("([%(%)%.%%%+%-%*%?%[%^%$%]])", "%%%1")
-end
-
-function util.trim(str, chars)
-  if not chars then return str:match("^[%s]*(.-)[%s]*$") end
-  chars = util.escape_magic(chars)
-  return str:match("^[" .. chars .. "]*(.-)[" .. chars .. "]*$")
-end
-
-function util.shallow_copy(t)
-  local rtn = {}
-  for k, v in pairs(t) do rtn[k] = v end
-  return rtn
-end
-
-local function table_replace_with(tbl, other)
-   if tbl == other then
-      return tbl
-   end
-
-   local mt = getmetatable(tbl)
-   local other_mt = getmetatable(other)
-   if mt and other_mt then
-      table_replace_with(mt, other_mt)
-   end
-
-   for k, _ in pairs(tbl) do
-      tbl[k] = nil
-   end
-
-   for k, v in pairs(other) do
-      tbl[k] = v
-   end
-
-   return tbl
-end
-
 -- from lume
 function util.hotload(modname)
    -- the module name has to match exactly in the way it was
@@ -223,7 +185,7 @@ function util.hotload(modname)
       print("no module named " .. modname .. ", requiring")
       return require(modname)
    end
-   local oldglobal = util.shallow_copy(_G)
+   local oldglobal = table.shallow_copy(_G)
    local updated = {}
    local function update(old, new)
       if updated[old] then return end
@@ -237,7 +199,7 @@ function util.hotload(modname)
    local err = nil
    local function onerror(e)
       for k in pairs(_G) do _G[k] = oldglobal[k] end
-      err = util.trim(e)
+      err = string.trim(e)
    end
    local ok, oldmod = pcall(require, modname)
    oldmod = ok and oldmod or nil
@@ -245,7 +207,7 @@ function util.hotload(modname)
          package.loaded[modname] = nil
          local newmod = require(modname)
          --if type(oldmod) == "table" then update(oldmod, newmod) end
-         if type(oldmod) == "table" then table_replace_with(oldmod, newmod) end
+         if type(oldmod) == "table" then table.replace_with(oldmod, newmod) end
          for k, v in pairs(oldglobal) do
             if v ~= _G[k] and type(v) == "table" then
                update(v, _G[k])
@@ -256,26 +218,6 @@ function util.hotload(modname)
    package.loaded[modname] = oldmod
    if err then return nil, err end
    return oldmod
-end
-
-function util.split(s, re)
- local i1, ls = 1, { }
-  if not re then re = '%s+' end
-  if re == '' then return { s } end
-  while true do
-    local i2, i3 = s:find(re, i1)
-    if not i2 then
-      local last = s:sub(i1)
-      if last ~= '' then ls[#ls+1] = last end
-      if #ls == 1 and ls[1] == '' then
-        return  { }
-      else
-        return ls
-      end
-    end
-    ls[#ls+1] = s:sub(i1, i2 - 1)
-    i1 = i3 + 1
-  end
 end
 
 -- Generate a unique new wxWindowID

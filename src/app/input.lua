@@ -18,8 +18,11 @@ function input:init(app, frame)
    self.sizer:Add(self.history_box, 0, wx.wxEXPAND, 0)
 
    self.text_ctrl = wx.wxTextCtrl(self.panel, wx.wxID_ANY, "",
-                                   wx.wxPoint(0, 0), wx.wxSize(400, 300),
+                                   wx.wxPoint(0, 0), wx.wxSize(200, 300),
                                    wx.wxTE_MULTILINE);
+   self.text_ctrl:SetFont(util.create_font(config.input.fontsize or 12, wx.wxFONTFAMILY_MODERN, wx.wxFONTSTYLE_NORMAL,
+                                   wx.wxFONTWEIGHT_NORMAL, false, config.input.fontname or "",
+                                   wx.wxFONTENCODING_DEFAULT))
    self.sizer:Add(self.text_ctrl, 1, wx.wxEXPAND, 5)
 
    self.panel:SetSizer(self.sizer)
@@ -27,14 +30,14 @@ function input:init(app, frame)
 
    util.connect(self.history_box, wx.wxEVT_COMBOBOX, self, "on_combobox")
 
-   app:add_pane(self.panel,
-                {
-                   Name = "Text Input",
-                   Caption = "Text Input",
-                   MinSize = wx.wxSize(400, 300),
-                   "Top",
-                   "Left"
-                })
+   self.pane = self.app:add_pane(self.panel,
+                                 {
+                                    Name = "Text Input",
+                                    Caption = "Text Input",
+                                    MinSize = wx.wxSize(200, 100),
+                                    "Top",
+                                    "Left"
+                                 })
 end
 
 function input:set_text(text)

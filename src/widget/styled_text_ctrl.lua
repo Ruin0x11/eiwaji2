@@ -232,7 +232,7 @@ function styled_text_ctrl.create(...)
   function editor:IsLineEmpty(line)
     local text = self:GetLineDyn(line or self:GetCurrentLine())
     local lc = self.spec and self.spec.linecomment
-    return not text:find("%S") or (lc and text:find("^%s*"..util.escape_magic(lc)) ~= nil)
+    return not text:find("%S") or (lc and text:find("^%s*"..string.escape_magic(lc)) ~= nil)
   end
 
   function editor:GetModifiedTime() return self.updated end

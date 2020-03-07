@@ -6,8 +6,10 @@ local input = require("app.input")
 local lexer = require("app.lexer")
 local search = require("app.search")
 local display = require("app.display")
+local wordlist = require("app.wordlist")
 local debug_server = require("app.debug_server")
 local clipboard_watcher = require("app.clipboard_watcher")
+local pane_attacher = require("app.pane_attacher")
 local repl = require("app.repl")
 local config = require("config")
 
@@ -21,15 +23,16 @@ function app:init()
    self.name = "eiwaji2"
    self.version = "0.1.0"
    self.wx_version = string.match(wx.wxVERSION_STRING, "[%d%.]+")
-   self.width = 800
-   self.height = 600
+   self.width = 1024
+   self.height = 768
 
    print(ID.LEX)
    local file_menu = wx.wxMenu()
    file_menu:Append(ID.LEX, "&Lex Text\tCTRL+L", "Send current text to the lexer")
    file_menu:AppendCheckItem(ID.WATCH_CLIPBOARD, "&Watch Clipboard", "Automatically lex text when the clipboard changes.")
+   file_menu:Append(ID.ATTACH_PANES, "A&ttach Panes", "Move panes to surround selected window.")
+   file_menu:Append(ID.REDOCK_PANES, "R&edock Panes", "Move all panes back into the main window.")
    file_menu:Append(ID.EXIT, "E&xit", "Quit the program")
-
    local help_menu = wx.wxMenu()
    help_menu:Append(ID.ABOUT, "&About", "About this program")
 
@@ -37,7 +40,7 @@ function app:init()
    self.menu_bar:Append(file_menu, "&File")
    self.menu_bar:Append(help_menu, "&Help")
 
-   self.frame = wx.wxFrame(wx.NULL, wx.wxID_ANY, "eiwaji2",
+   self.frame = wx.wxFrame(wx.NULL, wx.wxID_ANY, self.name,
                            wx.wxDefaultPosition, wx.wxSize(self.width, self.height),
                            wx.wxDEFAULT_FRAME_STYLE)
    self.frame.MenuBar = self.menu_bar
@@ -47,6 +50,8 @@ function app:init()
 
    self:connect_frame(ID.LEX, wx.wxEVT_COMMAND_MENU_SELECTED, self, "on_menu_lex")
    self:connect_frame(ID.WATCH_CLIPBOARD, wx.wxEVT_COMMAND_MENU_SELECTED, self, "on_menu_watch_clipboard")
+   self:connect_frame(ID.ATTACH_PANES, wx.wxEVT_COMMAND_MENU_SELECTED, self, "on_menu_attach_panes")
+   self:connect_frame(ID.REDOCK_PANES, wx.wxEVT_COMMAND_MENU_SELECTED, self, "on_menu_redock_panes")
    self:connect_frame(ID.EXIT, wx.wxEVT_COMMAND_MENU_SELECTED, self, "on_menu_exit")
    self:connect_frame(ID.ABOUT, wx.wxEVT_COMMAND_MENU_SELECTED, self, "on_menu_about")
 
@@ -56,16 +61,21 @@ function app:init()
    self.aui = wxaui.wxAuiManager()
    self.aui:SetManagedWindow(self.frame);
 
-   self.widget_repl = repl:new(self, self.frame)
+   self.widget_wordlist = wordlist:new(self, self.frame)
    self.widget_input = input:new(self, self.frame)
    self.widget_lexer = lexer:new(self, self.frame)
-   self.widget_display = display:new(self, self.frame)
    self.widget_search = search:new(self, self.frame)
+   self.widget_display = display:new(self, self.frame)
+   self.widget_repl = repl:new(self, self.frame)
 
    self.debug_server = debug_server:new(self, 4567)
    self.clipboard_watcher = clipboard_watcher:new(self, config.clipboard.watch_delay)
    if config.clipboard.watch_on_startup then
       self.clipboard_watcher:start()
+   end
+
+   if util.os_name() == "Windows" then
+      self.pane_attacher = pane_attacher:new(self)
    end
 
    self.aui:Update();
@@ -86,7 +96,11 @@ function app:add_pane(ctrl, args)
       end
    end
 
+   info = info:CloseButton(false)
+
    self.aui:AddPane(ctrl, info)
+
+   return info
 end
 
 function app:connect(...)
@@ -131,6 +145,20 @@ function app:on_menu_watch_clipboard(event)
       self.frame:SetStatusText("Not watching clipboard.")
       self.clipboard_watcher:stop()
    end
+end
+
+function app:on_menu_attach_panes(_)
+   self.pane_attacher:start()
+end
+
+function app:on_menu_redock_panes(_)
+   local pane_list = self.aui:GetAllPanes()
+   for i = 0, pane_list:GetCount() - 1 do
+      self.aui:GetPane(pane_list:Item(i).name):Dock(true)
+   end
+   self.aui:Update()
+   self.frame:SetSize(self.width, self.height)
+   self.frame:Center(wx.wxBOTH)
 end
 
 function app:on_menu_exit(_)

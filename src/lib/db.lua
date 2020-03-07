@@ -1,8 +1,7 @@
 local dawg = require "lib.dawg"
 local sqlite = require "thirdparty.ljsqlite3"
-local util = require"lib.util"
 
-local split = util.split
+local split = string.split
 
 local db = class.class("db")
 

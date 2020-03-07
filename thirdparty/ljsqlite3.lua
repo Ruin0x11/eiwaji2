@@ -183,7 +183,7 @@ int sqlite3_create_function(
 ]]
 
 --------------------------------------------------------------------------------
-local sql = ffi.load("sqlite3")
+local sql = ffi.load(ffi.os == "Windows" and "sqlite3.dll" or "sqlite3")
 
 local transient = ffi.cast("sqlite3_destructor_type", -1)
 local int64_ct = ffi.typeof("int64_t")
