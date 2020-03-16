@@ -65,6 +65,8 @@ function input:send_to_lexer(no_history)
       self.history_box:Delete(0)
       table.remove(self.history, 1)
    end
+
+   self.history_box:SetSelection(self.history_box:GetCount()-1)
 end
 
 --

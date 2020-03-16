@@ -50,6 +50,14 @@ end
 -- Events
 --
 
+local function is_all_katakana(text)
+   return false
+end
+
+local function katakana_to_hiragana(text)
+   return text
+end
+
 function lexer:on_html_link_clicked(event)
    local href = event:GetLinkInfo():GetHref()
    local word = self.results[tonumber(href)]
@@ -57,7 +65,7 @@ function lexer:on_html_link_clicked(event)
       error("missing word " .. href)
    end
 
-   self.app:print("Word: %s", inspect(word))
+   self.app:print("Word: %s (%s)", word.word, word.lemma)
 
    local ctxt = {
       sentence = { word = word.word, start_pos = word.start_pos, text = self.text, added = os.time() }
@@ -72,9 +80,16 @@ function lexer:on_html_link_clicked(event)
 
    for i, token in ipairs(word.tokens) do
       ctxt[#ctxt+1] = {
-         display = ("%s (token %d)"):format(token.lemma, i),
-         term = token.lemma,
+         display = ("%s (literal %d)"):format(token.literal, i),
+         term = token.literal,
       }
+
+      if token.lemma ~= "*" and token.lemma ~= token.literal then
+         ctxt[#ctxt+1] = {
+            display = ("%s (token %d)"):format(token.lemma, i),
+            term = token.lemma,
+         }
+      end
    end
 
    self.app.widget_search:set_context(ctxt)

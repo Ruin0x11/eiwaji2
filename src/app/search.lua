@@ -50,7 +50,7 @@ function search:init(app, frame)
                                  {
                                     Name = "Search",
                                     Caption = "Search",
-                                    MinSize = wx.wxSize(340, 200),
+                                    MinSize = wx.wxSize(200, 200),
                                     "Right"
                                  })
 

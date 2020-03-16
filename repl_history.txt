@@ -1,0 +1,306 @@
+win32.GetWindowRect(win32.GetForegroundWindow(), r)
+r
+r.left
+wx
+app
+app.widget_repl:clear()
+app.aui
+app.aui:GetAllPanes()[1]
+app.aui:GetAllPanes()
+app.aui:GetPane()
+app.aui:GetPane("asd")
+app.aui:GetPane("Wordlist")
+app.aui:GetPane("Wordlist").name
+app.aui:GetPane("Wordlist"):Float()
+app.aui:GetPane("Wordlist"):Float(true)
+app.aui:GetPane("Wordlist"):Dock(false)
+app.aui:Update()
+app.aui:GetPane("Wordlist"):Float(false)
+app.aui:Update()
+app.aui:GetPane("Wordlist"):Float(false)
+app.aui:Update()
+app.aui:Update()
+app.aui:GetPane("Wordlist"):Float(true)
+app.aui:Update()
+app.aui:GetPane("Wordlist"):Dock(true)
+app.aui:Update()
+util
+util.os_name()
+win32.GetWindowRect(win32.GetForegrxaoundWindow(), r)s
+window_attacher = require("app/window_attacher")
+window_attacher
+w = window_attacher:new(app)
+w:start()
+w:start()
+w:start()
+w = window_attacher:new(app)
+w:start()
+app.widget_repl:Clear()
+app.window_attacher
+app.window_attacher:new()
+app.window_attacher:start()
+wx
+app.window_attacher:start()
+app.window_attacher:start()
+user32.GetForegroundWindow()
+require("win32.user32").GetForegroundWindow()
+app.aui:GetAllPanes()
+app.aui:GetAllPanes():get(1)
+app.aui:GetAllPanes()[0]
+app.aui:GetAllPanes():Item(0)
+app.aui:GetAllPanes():Item(1)
+app.aui:GetAllPanes():Item(1)
+app.window_attacher:do_attach()
+app.window_attacher:do_attach()
+app.window_attacher:do_attach()
+app.window_attacher:do_attach()
+app.window_attacher:redock_panes()
+app.aui:GetAllPanes():Item(0).name
+app.aui:GetAllPanes():Item(0):Dock(false)
+app.aui:Update()
+app.aui:GetAllPanes():Item(0):Dock(true)
+app.aui:Update()
+app.aui:Update()
+app.aui:Update()
+app.aui:Update()
+app.aui:GetAllPanes():Item(0):Float(false)
+app.aui:Update()
+app.aui:GetPane("Wordlist"):Float(true)
+app.aui:Update()
+app.aui:GetPane("Wordlist"):Float(false)
+app.aui:Update()
+app.aui:GetPane("Wordlist"):Dock(true)
+app.aui:Update()
+app.aui:GetPane("Wordlist"):Dock(false)
+app.aui:GetPane("Wordlist"):Dock(false)
+app.aui:Update()
+app.aui:GetPane("Wordlist"):Dock(true)
+app.aui:Update()
+app.aui:GetPane("Wordlist"):Float(true)
+app.aui:Update()
+app.aui:GetPane("Wordlist"):Float(false)
+app.aui:Update()
+app.aui:GetPane("Wordlist"):Dock(true)
+app.aui:Update()
+app.aui:GetAllPanes():Item(1):Float(true)
+app.aui:Update()
+app.window_attacher:do_attach()
+app.window_attacher:redock_panes()
+app.aui:GetAllPanes():Item(1).floating_pos
+app.aui:GetAllPanes():Item(1).floating_pos.x
+app.aui:GetAllPanes():Item(1).floating_pos.y
+app.aui:GetAllPanes():Item(1).floating_pos.y
+app.aui:GetAllPanes():Item(1).floating_pos.y
+app.aui:GetAllPanes():Item(1).rect.x
+app.aui:GetAllPanes():Item(1).rect.y
+app.aui:GetAllPanes():Item(1).name
+app.window_attacher:do_attach()
+app.aui:GetAllPanes():Item(1).floating_pos.x
+app.aui:GetAllPanes():Item(1).floating_pos.x = 600
+app.aui:Update()
+app.aui:GetAllPanes():Item(1).move
+app.aui:GetAllPanes():Item(1).Move
+app.aui:GetAllPanes():Item(1):FloatingPosition(wx.wxPoint(200, 200))
+app.aui:Update()
+app.aui:GetAllPanes():Item(1).name
+app.aui:GetAllPanes():Item(1).floating_position.x
+app.aui:GetAllPanes():Item(1).floating_pos.x
+app.aui:GetAllPanes():Item(1).floating_pos.y
+app.window_attacher:redock_windows()
+app.window_attacher:redock_panes()
+app.aui:GetAllPanes():Item(1):FloatingPosition(wx.wxPoint(200, 200))
+app.aui:GetAllPanes():Item(1).floating_pos
+app.aui:GetAllPanes():Item(1).floating_pos.x
+app.aui:GetAllPanes():Item(1).floating_pos.y
+app.aui:GetAllPanes():Item(1):Float(true):FloatingPosition(wx.wxPoint(400, 400))
+app.aui:Update()
+app.aui:GetPane("Wordlist"):Float(true):FloatingPosition(300, 300)
+app.aui:Update()
+app.aui:GetPane("Wordlist"):FloatingPosition(100, 100)
+app.aui:Update()
+app.window_attacher:start()
+app.window_attacher:stop()
+app.window_attacher:start()
+app.window_attacher:stop()
+app.window_attacher:start()
+app.window_attacher:stop()
+app.window_attacher:start()
+app.window_attacher:stop()
+app.window_attacher:redock_panes()
+app.window_attacher:stop()
+app.window_attacher:start()
+app.window_attacher:stop()
+app.window_attacher:start()
+app.window_attacher:stop()
+os.date()
+app.window_attacher:start()
+app.window_attacher:redock_panes()
+os.time()
+app:get_pane(app.widget_wordlist)
+os.date(nil, os.time())
+app:get_pane(app.widget_wordlist)
+app.panes
+fun.iter(table.keys(wx)):filter(function(a) return a:match("^wxART") end):to_list()
+fun.iter(table.keys(wx)):filter(function(a) return a:match("^wxEVT_TOOL") end):to_list()
+app.window_attacher:start()
+app.window_attacher:stop()
+app.window_attacher:start()
+app.window_attacher:stop()
+app.window_attacher:start()
+app.window_attacher:start()
+app.window_attacher:stop()
+app.window_attacher:start()
+app.window_attacher:start()
+app.window_attacher:start()
+ util.connect(self.tool_bar, wx.wxEVT_TOOL, self, "on_tool")
+app.window_attacher:start()
+ util.connect(self.tool_bar, wx.wxEVT_TOOL, self, "on_tool")
+app.window_attacher:start()
+app.window_attacher:stop()
+app.window_attacher:redock_panes()
+app.window_attacher:start()
+app.window_attacher:redock_panes()
+app.window_attacher:start()
+self = app.widget_display
+app.window_attacher:start()
+ util.connect(self.tool_bar, wx.wxEVT_TOOL, self, "on_tool")
+app.window_attacher:start()
+wx
+app.widget_wordlist.pane.rect.height
+app.widget_wordlist.pane.best_size.x
+app.widget_wordlist.pane.best_size.height
+app.widget_wordlist.pane.window:GetWidth()
+app.widget_wordlist.pane.frame
+app.widget_wordlist.pane.window
+app.aui:GetPane("Wordlist")
+app.aui:GetPane("Wordlist").window
+app.aui:GetPane("Wordlist").window:GetWidth()
+app.aui:GetPane("Wordlist").window.width
+app.aui:GetPane("Wordlist").window:GetSize().width
+app.aui:GetPane("Wordlist").window:GetSize()
+app.aui:GetPane("Wordlist").window:GetSize().x
+app.aui:GetPane("Wordlist").window:GetSize().y
+app.aui:GetPane("Wordlist").window:GetSize().height
+app.aui:GetPane("Wordlist").window:GetVirtualSize().height
+app.aui:GetPane("Wordlist").frame
+app.aui:GetPane("Wordlist").window:GetSize()
+app.aui:GetPane("Wordlist").window:GetRect()
+app.aui:GetPane("Wordlist").window:GetRect().x
+app.aui:GetPane("Wordlist").window:GetRect().y
+app.aui:GetPane("Wordlist").window:GetRect().width
+app.aui:GetPane("Wordlist").window:GetRect().wheight
+app.aui:GetPane("Wordlist").window.rect
+app.window_attacher:start()
+app.window_attacher:stop()
+app.window_attacher:start()
+app.window_attacher:start()
+app.window_attacher:start()
+app.window_attacher:start()
+app.window_attacher:start()
+app.window_attacher:stop()
+app.window_attacher:start()
+app.window_attacher:start()
+app.widget_repl:ClearOutput()_
+app.widget_search.db
+app.widget_search.db:find_by_ids({10000})
+app.widget_lexer.html:GetFont()
+app.widget_lexer.html:GetFont():SetPointSize(12)
+app.widget_lexer.html:GetFont():SetPointSize(14)
+app.widget_lexer.html:GetFont():SetPixelSize(14)
+app.widget_lexer.html:GetFont():SetPointSize(14)
+app.widget_search.db:find_by_ids({10000})
+app.widget_search.db:find_by_ids({1000})
+app.widget_search.db:find_by_ids({100})
+app.widget_search.db:find_by_ids({123123})
+app.aui:GetPane("Lexer"):GetSize().width
+app.aui:GetPane("Lexer").rect.height
+app.aui:GetPane("Lexer").window:GetRect().height
+app.aui:GetPane("Lexer").window:GetRect().height
+app.widget_search.db:find_by_ids({1231231})
+require("thirdparty.yukie").parse_to_words("ブラウザやスマートフォン、タブレットで遊べるオリジナルの無料ゲーム
+どこでも、ひまつぶしに遊べる完全無料のゲームで楽しもう！")
+require("thirdparty.yukie").parse_to_words("ブラウザやスマートフォン、タブレットで遊べるオリジナルの無料ゲームどこでも、ひまつぶしに遊べる完全無料のゲームで楽しもう！")
+app.frame:GetSize()
+app.frame:GetSize().width
+app.frame:GetSize().x
+app.frame:GetSize().height
+app.frame:GetSize()
+app.frame:GetSize():GetHeight()
+app.frame:SetSize(400, 400)
+a
+app.widget_wordlist.list_ctrl:GetColumn(2)
+app.widget_wordlist.list_ctrl:GetColumn(1)
+app.widget_wordlist.list_ctrl:GetColumnInfo(1)
+app.widget_wordlist.list_ctrl:GetColumnWidth(2)
+app.widget_wordlist.list_ctrl:GetColumnWidth(1)
+app.widget_wordlist.list_ctrl:GetColumnWidth(0)
+require("lib.lexer_html").colorize_sentence({word="遊べる", start_pos=16}, "ブラウザやスマートフォン、タブレットで遊べるオリジナルの無料ゲーム")
+app.widget_search.db:search("ねこ")
+app.widget_search.db:find_by_ids({1845650})
+app.widget_search.db:find_by_ids({123123})
+app.widget_search.db:find_by_ids({123123})
+app.widget_search.db:find_by_ids({1845650})
+app.widget_search:search_text "id:1845650"
+win32 = require("thirdparty.win32.winuser")
+app.widget_search:search_text "id:1845650"
+win32 = require("thirdparty.win32.winuser")
+app.widget_search:search_text "id:1845650"
+app.widget_search:search_text "id:1845650"
+win32 = require("thirdparty.win32.winuser")
+wx
+win32 = require("thirdparty.win32.winuser")
+win32 = require("thirdparty.win32.user32")
+wx.wxEVT_HTML_LINK_CLICKED
+win32 = require("thirdparty.win32.user32")
+app.widget_repl:ClearOutput()
+app.widget_repl:ClearOutput()
+win32 = require("thirdparty.win32.user32")
+win32.GetForegroundWindow()
+win32.GetWindowRect(win32.GetForegroundWindow()
+ｆｓ
+wx.wxGetCWD()
+wx.wxGetCwd()
+lprect = ffi.new("LPRECT")
+app.widget_wordlist.dat
+app.widget_wordlist.data
+ffi = require"ffi"
+os.time()
+lprect = ffi.new("LPRECT")
+lprect = ffi.new("LPRECT")
+config
+app.widget_wordlist:GetScrollPos()
+app.widget_wordlist.list_ctrl:GetScrollPos()
+app.widget_wordlist.list_ctrl:GetScrollPos(wx.wxHORIZONTAL)
+app.widget_wordlist.list_ctrl:GetScrollPos(wx.wxVERTICAL)
+app.widget_wordlist.list_ctrl:GetScrollPos(wx.wxVERTICAL)
+app.widget_wordlist.list_ctrl:Update()
+app.widget_wordlist.list_ctrl:Update()
+app.widget_wordlist.list_ctrl:EnsureVisible(5)
+app.widget_wordlist.list_ctrl:EnsureVisible(10)
+app.widget_wordlist.list_ctrl:EnsureVisible(20)
+app.widget_wordlist.list_ctrl:GetBottomIndex()
+win32.GetWindowRect(win32.GetForegroundWindow(), lprect)
+lprect
+win32.GetForegroundWindow()
+win32.GetForegroundWindow()
+lprect
+lprectlocal p = ffi.gc(ffi.malloc(sizeof('float[n]')), ffi.free)a
+local p = ffi.gc(ffi.malloc(sizeof('tagRECT')), ffi.free)
+p = ffi.gc(ffi.malloc(ffi.sizeof('tagRECT')), ffi.free)
+p = ffi.gc(ffi.malloc(ffi.sizeof('LPRECT')), ffi.free)
+ffi.sizeof("LPRECT")
+ffi.sizeof("tagRECT")
+require("win32.user32").IsWindow(app.pane_attacher.handle)
+local p = ffi.gc(ffi.malloc(sizeof('RECT')), ffi.free)
+local p = ffi.gc(ffi.malloc(ffi.sizeof('RECT')), ffi.free)
+yukie
+require("thirdparty.yukie").parse_to_words("テポドン級")
+p = ffi.gc(ffi.malloc(ffi.sizeof('RECT')), ffi.free)
+ffi
+require("thirdparty.yukie").parse_to_words("昂揚しかけた気持ちがすっと沈んでいく。^nシャーリィの表情は、また。")
+p = ffi.gc(ffi.C.malloc(ffi.sizeof('RECT')), ffi.free)
+r = ffi.new("RECT")
+config
+config.panewidth=300
+config.panewidth=320
+config.panewidth=330

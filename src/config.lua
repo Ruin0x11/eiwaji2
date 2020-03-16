@@ -14,6 +14,8 @@ return {
   },
   activateoutput = true, -- activate output/console on Run/Debug/Compile
   stylesoutshell = nil,
+  panewidth = 350,
+  paneheight = 250,
   debugger = {
     maxdatalength = 256,
   },
@@ -40,5 +42,5 @@ return {
   wordlist = {
     autosave_on_add = true
   },
-  db_path = "C:\\Users\\kuzuki\\build\\eiwaji2\\dict.db"
+  db_path = "dict.db"
 }

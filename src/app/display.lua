@@ -3,7 +3,7 @@ local wx = require("wx")
 local util = require("lib.util")
 local lexer_html = require("lib.lexer_html")
 
-local TOOL_ADD = 5002
+local TOOL_ADD = 5003
 
 function display:init(app, frame)
    self.app = app
@@ -34,7 +34,7 @@ function display:init(app, frame)
                                  {
                                     Name = "Result",
                                     Caption = "Result",
-                                    MinSize = wx.wxSize(340, 100),
+                                    MinSize = wx.wxSize(200, 100),
                                     "Right"
                                  })
 end
@@ -59,7 +59,7 @@ function display:set_word(entry, sentence, enable_add)
    local readings = fun.iter(entry.readings):extract("reading"):to_list()
    local senses = fun.iter(entry.senses)
       :map(function(sense)
-            return table.concat(sense.glosses, ";")
+            return table.concat(sense.glosses, ", ")
             end)
       :to_list()
 
@@ -76,7 +76,7 @@ function display:set_word(entry, sentence, enable_add)
 ]]):format(
       table.concat(kanjis, "; "),
       table.concat(readings, "; "),
-      table.concat(senses, "; ")
+      table.concat(senses, "\n")
    )
 
    local example_sentences = self.app.widget_wordlist:get_sentences(entry.sequence_number)

@@ -10,6 +10,7 @@ local COLUMN_ADDED = 2
 
 local TOOL_SAVE = 5000
 local TOOL_LOAD = 5001
+local TOOL_CLEAR = 5002
 
 function wordlist:init(app, frame)
    self.app = app
@@ -27,6 +28,8 @@ function wordlist:init(app, frame)
    self.tool_bar:AddTool(TOOL_SAVE, "Save", bmp);
    bmp = wx.wxArtProvider.GetBitmap(wx.wxART_FILE_OPEN, wx.wxART_OTHER, wx.wxSize(16,16));
    self.tool_bar:AddTool(TOOL_LOAD, "Load", bmp);
+   bmp = wx.wxArtProvider.GetBitmap(wx.wxART_CROSS_MARK);
+   self.tool_bar:AddTool(TOOL_CLEAR, "Clear", bmp);
    self.tool_bar:Realize();
    self.sizer:Add(self.tool_bar, 0, wx.wxEXPAND, 0)
 
@@ -53,7 +56,7 @@ function wordlist:init(app, frame)
                                  {
                                     Name = "Wordlist",
                                     Caption = "Wordlist",
-                                    MinSize = wx.wxSize(340, 100),
+                                    MinSize = wx.wxSize(200, 100),
                                     "Left"
                                  })
 end
@@ -153,13 +156,13 @@ function wordlist:load_list(file_path)
    local text = handle:read("*a")
    handle:close()
 
-   local ok, data = pcall(json.decode, text)
+   local ok, to_load = pcall(json.decode, text)
    if not ok then
-      return false, data
+      return false, to_load
    end
 
    self.data = {}
-   for db_id, entry in pairs(data) do
+   for db_id, entry in pairs(to_load) do
       self.data[tonumber(db_id)] = entry
    end
 
@@ -181,6 +184,20 @@ function wordlist:load_list(file_path)
    self.app:print("Loaded word list from '%s'.", file_path)
 
    return true, nil
+end
+
+function wordlist:clear_list()
+   local res = wx.wxMessageBox("Are you sure you want to clear the current wordlist?",
+                               "Clear wordlist",
+                               wx.wxYES_NO,
+                               self.panel);
+
+   if (res == wx.wxYES) then
+      self.list_ctrl:DeleteAllItems()
+      self.data = {}
+      self.loaded_file = nil
+      self.app:print("Cleared word list.")
+   end
 end
 
 local function get_wordlist_dir()
@@ -238,6 +255,8 @@ function wordlist:on_tool(event)
       self:prompt_save_list()
    elseif id == TOOL_LOAD then
       self:prompt_load_list()
+   elseif id == TOOL_CLEAR then
+      self:clear_list()
    end
 end
 

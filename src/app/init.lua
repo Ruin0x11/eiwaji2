@@ -26,19 +26,21 @@ function app:init()
    self.width = 1024
    self.height = 768
 
-   print(ID.LEX)
-   local file_menu = wx.wxMenu()
-   file_menu:Append(ID.LEX, "&Lex Text\tCTRL+L", "Send current text to the lexer")
-   file_menu:AppendCheckItem(ID.WATCH_CLIPBOARD, "&Watch Clipboard", "Automatically lex text when the clipboard changes.")
-   file_menu:Append(ID.ATTACH_PANES, "A&ttach Panes", "Move panes to surround selected window.")
-   file_menu:Append(ID.REDOCK_PANES, "R&edock Panes", "Move all panes back into the main window.")
-   file_menu:Append(ID.EXIT, "E&xit", "Quit the program")
-   local help_menu = wx.wxMenu()
-   help_menu:Append(ID.ABOUT, "&About", "About this program")
+   self.file_menu = wx.wxMenu()
+   self.file_menu:Append(ID.OPEN, "&Open...\tCTRL+O", "Open a file in the lexer")
+   self.file_menu:Append(ID.LEX, "&Lex Text\tCTRL+L", "Send current text to the lexer")
+   self.file_menu:AppendCheckItem(ID.WATCH_CLIPBOARD, "&Watch Clipboard", "Automatically lex text when the clipboard changes.")
+   if util.os_name() == "Windows" then
+      self.file_menu:AppendCheckItem(ID.ATTACH_PANES, "A&ttach Panes", "Move panes to surround selected window.")
+   end
+   self.file_menu:Append(ID.REDOCK_PANES, "R&edock Panes", "Move all panes back into the main window.")
+   self.file_menu:Append(ID.EXIT, "E&xit", "Quit the program")
+   self.help_menu = wx.wxMenu()
+   self.help_menu:Append(ID.ABOUT, "&About", "About this program")
 
    self.menu_bar = wx.wxMenuBar()
-   self.menu_bar:Append(file_menu, "&File")
-   self.menu_bar:Append(help_menu, "&Help")
+   self.menu_bar:Append(self.file_menu, "&File")
+   self.menu_bar:Append(self.help_menu, "&Help")
 
    self.frame = wx.wxFrame(wx.NULL, wx.wxID_ANY, self.name,
                            wx.wxDefaultPosition, wx.wxSize(self.width, self.height),
@@ -75,7 +77,7 @@ function app:init()
    end
 
    if util.os_name() == "Windows" then
-      self.pane_attacher = pane_attacher:new(self)
+      self.pane_attacher = pane_attacher:new(self, self.file_menu)
    end
 
    self.aui:Update();
@@ -147,8 +149,15 @@ function app:on_menu_watch_clipboard(event)
    end
 end
 
-function app:on_menu_attach_panes(_)
+function app:on_menu_attach_panes(event)
    self.pane_attacher:start()
+   if event:IsChecked() then
+      self.frame:SetStatusText("Select another window to attach panes.")
+      self.pane_attacher:start()
+   else
+      self.frame:SetStatusText("Stopping pane attachment.")
+      self.pane_attacher:stop()
+   end
 end
 
 function app:on_menu_redock_panes(_)

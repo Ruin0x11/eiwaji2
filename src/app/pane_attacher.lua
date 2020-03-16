@@ -3,29 +3,35 @@ local wx = require("wx")
 local config = require("config")
 local ffi = require("ffi")
 
+local ID = require("lib.ids")
+
 assert(util.os_name() == "Windows")
 local user32 = require("win32.user32")
 
 local pane_attacher = class.class("pane_attacher")
 
-function pane_attacher:init(app)
+function pane_attacher:init(app, menu)
    self.app = app
+   self.menu = menu
    self.id = util.new_id()
    self.timer = wx.wxTimer(app.frame, self.id)
    self.handle = nil
+   self.is_set = false
+   self.delay = 250
 
    self.app:connect(self.id, wx.wxEVT_TIMER, self, "on_timer")
 end
 
 function pane_attacher:start()
    if self.timer:IsRunning() then
-      self.app:print "no"
       return
    end
 
    self.handle = user32.GetForegroundWindow()
+   self.is_set = false
 
-   self.timer:Start(100)
+   self.timer:Start(self.delay)
+   self.menu:Check(ID.ATTACH_PANES, true)
 end
 
 function pane_attacher:stop()
@@ -34,8 +40,10 @@ function pane_attacher:stop()
    end
 
    self.handle = nil
+   self.is_set = false
 
    self.timer:Stop()
+   self.menu:Check(ID.ATTACH_PANES, false)
 end
 
 function pane_attacher:on_clipboard_changed(buffer)
@@ -57,28 +65,29 @@ function pane_attacher:do_attach(left, top, right, bottom)
      p(pane_list:Item(i)):Float(true)
    end
 
-   local w = p(self.app.widget_wordlist.pane).window:GetRect().width
+   local w = config.panewidth
+   local h = config.paneheight
 
    local pane = p(self.app.widget_wordlist.pane)
-   pane:FloatingPosition(left - pane.window:GetRect().width, top)
-       :FloatingSize(pane.window:GetRect().width, height / 2)
+   pane:FloatingPosition(left - w, top)
+       :FloatingSize(w, height / 2)
    pane = p(self.app.widget_input.pane)
-   pane:FloatingPosition(left - pane.window:GetRect().width, top + height / 2)
-       :FloatingSize(pane.window:GetRect().width, height / 2)
+   pane:FloatingPosition(left - w, top + height / 2)
+       :FloatingSize(w, height / 2)
    pane = p(self.app.widget_lexer.pane)
    pane:FloatingPosition(left, bottom)
-       :FloatingSize(width, 250)
+       :FloatingSize(width, h)
    pane = p(self.app.widget_repl.pane)
    pane:FloatingPosition(left + width, bottom)
-       :FloatingSize(w, 250)
+       :FloatingSize(w, h)
    pane = p(self.app.widget_search.pane)
    pane:FloatingPosition(right, top)
-       :FloatingSize(pane.window:GetRect().width, height / 2)
+       :FloatingSize(w, height / 2)
    pane = p(self.app.widget_display.pane)
    pane:FloatingPosition(right, top + height / 2)
-       :FloatingSize(pane.window:GetRect().width, height / 2)
+       :FloatingSize(w, height / 2)
 
-   self.app.frame:SetSize(w, 250)
+   self.app.frame:SetSize(w, h)
    self.app.frame:Move(left - w, bottom)
 
    self.app.aui:Update()
@@ -93,15 +102,25 @@ function pane_attacher:on_timer(event)
       return
    end
 
-   local new_handle = user32.GetForegroundWindow()
-   self.app.print("go, %s %s", new_handle, self.handle)
-   if new_handle ~= self.handle then
+   if not self.is_set then
+      local new_handle = user32.GetForegroundWindow()
+      if new_handle ~= self.handle then
+         self.is_set = true
+         self.handle = new_handle
+      end
+   end
+
+   if user32.IsWindow(self.handle) == 0 then
+      self.app:print("Window is invalid, stopping attachment.")
+      self:stop()
+   end
+
+   if self.is_set then
       local rect = ffi.new("RECT")
-      if user32.GetWindowRect(new_handle, rect) == 1 then
+      if user32.GetWindowRect(self.handle, rect) == 1 then
          self.app.print("Attach %s %s %s %s", rect.left, rect.top, rect.right, rect.bottom)
          self:do_attach(rect.left, rect.top, rect.right, rect.bottom)
       end
-      self:stop()
    end
 end
 

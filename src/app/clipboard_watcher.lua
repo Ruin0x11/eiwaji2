@@ -53,11 +53,13 @@ function clipboard_watcher:on_timer(event)
       return
    end
 
+   local log = wx.wxLogNull()
    clipboard:Open()
    clipboard.UsePrimarySelection = true
    local text_obj = wx.wxTextDataObject()
    local result = clipboard:GetData(text_obj)
    clipboard:Close()
+   log:delete()
 
    local buffer
    if result == nil then

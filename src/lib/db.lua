@@ -10,6 +10,53 @@ function db:init(file)
    self.dawg = nil
 end
 
+function db:close()
+    self.conn:close()
+end
+
+function db:dofile(file)
+   local f = assert(io.open(file, "r"))
+   local stmt = f:read("*all")
+   self.conn:exec(stmt)
+end
+
+function db:add(entries, senses, readings, kanjis)
+   self.conn:exec("BEGIN TRANSACTION")
+   local stmt = self.conn:prepare("INSERT INTO entries VALUES(?, ?)")
+   for _, entry in ipairs(entries) do
+      stmt:reset():bind(entry.sequence_number, entry.type):step()
+   end
+   self.conn:exec("COMMIT")
+
+   self.conn:exec("BEGIN TRANSACTION")
+   stmt = self.conn:prepare("INSERT INTO senses VALUES(?, ?, ?, ?)")
+   for _, sense in ipairs(senses) do
+      stmt:reset():bind(table.concat(sense.glosses, "|"),
+                        table.concat(sense.parts_of_speech, "|"),
+                        table.concat(sense.miscs, "|"),
+                        sense.entry.sequence_number):step()
+   end
+   self.conn:exec("COMMIT")
+
+   self.conn:exec("BEGIN TRANSACTION")
+   stmt = self.conn:prepare("INSERT INTO readings VALUES(?, ?, ?)")
+   for _, reading in ipairs(readings) do
+      stmt:reset():bind(reading.reading,
+                        table.concat(reading.pris, "|"),
+                        reading.entry.sequence_number):step()
+   end
+   self.conn:exec("COMMIT")
+
+   self.conn:exec("BEGIN TRANSACTION")
+   stmt = self.conn:prepare("INSERT INTO kanjis VALUES(?, ?, ?)")
+   for _, kanji in ipairs(kanjis) do
+      stmt:reset():bind(kanji.reading,
+                        table.concat(kanji.pris, "|"),
+                        kanji.entry.sequence_number):step()
+   end
+   self.conn:exec("COMMIT")
+end
+
 local function build_dawg(conn)
    print "build index"
 
