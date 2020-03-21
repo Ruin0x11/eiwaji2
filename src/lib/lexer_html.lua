@@ -15,7 +15,9 @@ local COLORS = {
    number       = "#000000",
    prefix       = "#000000",
    suffix       = "#000000",
-   default      = "#FF00FF"
+   default      = "#FF00FF",
+   interjection = "#000000",
+   proper_noun  = "#8080FF"
 }
 
 local function word_to_link(i, word)

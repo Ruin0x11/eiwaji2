@@ -66,6 +66,9 @@ function clipboard_watcher:on_timer(event)
       buffer = ""
    else
       buffer = text_obj:GetText()
+      if config.clipboard.filter then
+         buffer = buffer:gsub(config.clipboard.filter, "")
+      end
    end
 
    if self.last_buffer and self.last_buffer ~= buffer then

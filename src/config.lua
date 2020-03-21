@@ -20,7 +20,7 @@ return {
     maxdatalength = 256,
   },
   lexer = {
-     mecab_opts = nil,
+     mecab_opts = {"-Owakati", "-d", "lib/mecab/dic/ipadic-neologd"},
      fontname = nil,
      fontsize = nil
   },
@@ -33,7 +33,8 @@ return {
   clipboard = {
      max_length = 1000,
      watch_delay = 500,
-     watch_on_startup = true
+     watch_on_startup = true,
+     filter = nil
   },
   display = {
     fontname = nil,

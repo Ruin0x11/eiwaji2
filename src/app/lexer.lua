@@ -65,7 +65,7 @@ function lexer:on_html_link_clicked(event)
       error("missing word " .. href)
    end
 
-   self.app:print("Word: %s (%s)", word.word, word.lemma)
+   self.app:print("Word: %s (%s)", word.word, inspect(word))
 
    local ctxt = {
       sentence = { word = word.word, start_pos = word.start_pos, text = self.text, added = os.time() }

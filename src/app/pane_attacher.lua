@@ -118,7 +118,6 @@ function pane_attacher:on_timer(event)
    if self.is_set then
       local rect = ffi.new("RECT")
       if user32.GetWindowRect(self.handle, rect) == 1 then
-         self.app.print("Attach %s %s %s %s", rect.left, rect.top, rect.right, rect.bottom)
          self:do_attach(rect.left, rect.top, rect.right, rect.bottom)
       end
    end
