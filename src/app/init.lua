@@ -70,7 +70,7 @@ function app:init()
    self.widget_display = display:new(self, self.frame)
    self.widget_repl = repl:new(self, self.frame)
 
-   self.debug_server = debug_server:new(self, 4567)
+   self.debug_server = debug_server:new(self, 7890)
    self.clipboard_watcher = clipboard_watcher:new(self, config.clipboard.watch_delay)
    if config.clipboard.watch_on_startup then
       self.clipboard_watcher:start()
