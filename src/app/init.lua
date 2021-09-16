@@ -15,6 +15,7 @@ local config = require("config")
 
 local ID = require("lib.ids")
 
+--- @class app
 local app = class.class("app")
 
 function app:init()

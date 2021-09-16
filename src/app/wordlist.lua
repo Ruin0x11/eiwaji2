@@ -12,6 +12,8 @@ local TOOL_SAVE = 5000
 local TOOL_LOAD = 5001
 local TOOL_CLEAR = 5002
 
+--- @param app app
+--- @param frame any
 function wordlist:init(app, frame)
    self.app = app
 

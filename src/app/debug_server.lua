@@ -34,7 +34,7 @@ function debug_server:start()
       end
    end
 
-   self.server = jeejah.start(self.port, {debug=true,pp=pp,handlers=handlers})
+   self.server = jeejah.start(self.port, {debug=false,pp=pp,handlers=handlers})
 
    self.app:print("Debug server listening on %d.", self.port)
 
