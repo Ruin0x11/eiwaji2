@@ -20,7 +20,7 @@ return {
     maxdatalength = 256,
   },
   lexer = {
-     mecab_opts = {"-Owakati", "-d", "lib/mecab/dic/ipadic-neologd"},
+     mecab_opts = {"-Owakati", "-d", "lib/mecab/dic/ipadic"},
      fontname = nil,
      fontsize = nil
   },
